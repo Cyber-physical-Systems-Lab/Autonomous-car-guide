@@ -39,7 +39,7 @@ To complete this project, you’ll need the following:
 
 ### Core Components
 - **Raspberry Pi 5**
-- **Micro SD card** (16GB or larger, Class 10 recommended)
+- **64GB Micro SD card**
 - **XRAY M18 PRO chassis**
 - **Hobbywing QuicRun Fusion Mini 16** (2-in-1 ESC + motor combo)
 - **LiPo battery** for motor (2S or 3S, 7.4–11.1V, EC2 connector)
@@ -88,7 +88,7 @@ The **XRAY M18 PRO** is delivered as a disassembled chassis and must be
 assembled before use. A simple step-by-step assembly guide is included 
 in the box and should be followed for basic construction.
 
-### 🔩 Servo Mounting
+### Servo Mounting
 To mount it securely:
 - Use the **servo foot with one screw hole and a pin** on one side.
 - Use the **perpendicular bracket** on the opposite side.
@@ -180,18 +180,21 @@ git clone
 https://github.com/Cyber-physical-Systems-Lab/AutonomousCarGuide.git
 cd AutonomousCarGuide/Client
 
-In the terminal, write:
-- raspi-config
+sudo raspi-config
 Here we need to enable I2C by clicking:
-- 3 (Interface Options)
-- 
+- 3: Interface Options
+- I5: I2C 
+Would you like the ARM I2C interface to be enabled?
+<Yes>
 
-Check that the time and date is correct.
-
+sudo apt-get update
+sudo apt-get install python3-pip python3-dev i2c-tools
 
 Now we need to download and install all dependencies. 
-pip install Adafruit_CircuitPython_ServoKit
-pip install 
+pip3 install adafruit-blinka adafruit-circuitpython-servokit --break-system-packages
+
+Go into the client_steering.py file and change the server IP-adress to
+the adress of the external computer that is being used as server.
 
 ------------------------------------------------------------------------
 ## Software Setup for External Computer
@@ -199,11 +202,7 @@ pip install
 
 pip install cv2
 
-
-
-
-
-
-
-
+git clone 
+https://github.com/Cyber-physical-Systems-Lab/AutonomousCarGuide.git
+cd AutonomousCarGuide/Server
 
