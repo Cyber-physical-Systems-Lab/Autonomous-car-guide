@@ -33,13 +33,17 @@ last_send_times = {}
 # ==== Connection Handling ====
 def handle_new_connections():
     """
-    Listens for and accepts incoming TCP client connections.
+    Listens for and accepts incoming TCP client connections. Each connected
+    client is expected to send a user ID as the first message. The function
+    maps the client socket to this user ID and stores it in the 
+    `user_sockets` dictionary. This function is designed to run in a
+    background thread that loops indefinitely.
 
-    Each connected client is expected to send a user ID as the first message.
-    The function maps the client socket to this user ID and stores it in the
-    `user_sockets` dictionary.
+    Parameters: 
+        None
 
-    This function is designed to run in a background thread and loops indefinitely.
+    Returns:
+        None
     """
     while True:
         clientsocket, address = server_socket.accept()
@@ -61,7 +65,11 @@ def handle_new_connections():
 # ==== Angle and Steering ====
 def estimate_heading(corners):
     """
-    Estimates the heading angle of an ArUco marker.
+    Estimates the heading angle of an ArUco marker. Computes 
+    the midpoint of the front (top) and back (bottom) edges
+    of the marker, then calculates a vector between them. The
+    angle is derived from this vector using arctangent, with
+    correction for image coordinate direction.
 
     Parameters:
         corners (np.ndarray): Array of 4 marker corners from the
@@ -91,18 +99,45 @@ def estimate_heading(corners):
     return angle
 
 def map_angle_to_servo(relative_angle, dist):
+    """
+    Maps a relative angle and distance to a servo angle for steering control.
+    This function computes a servo command (in degrees) based on the vehicle's 
+    relative angle to an lane boundary and its distance to it.
+    The closer and sharper the turn, the stronger the steering correction.
+    The result is clamped between 48 and 132 degrees to protect the hardware.
+
+    Parameters:
+        relative_angle (float): The angle (in degrees) between the car's heading 
+            and the detected boundary. Range expected: -90 to 90.
+        dist (float): The distance to the obstacle or boundary.
+
+    Returns:
+        int or None: The computed servo angle (int between 48 and 132), or 
+        None if the relative angle is beyond ±90 degrees and considered invalid.
+    """
     if abs(relative_angle) > 90:
         return None
+    # Make sure the distance is within range
     dist = max(LOW_THRESHOLD, min(HIGH_THRESHOLD, dist))
+    # Normalize the distance
     normalized_dist = (HIGH_THRESHOLD - dist) / (HIGH_THRESHOLD - LOW_THRESHOLD)
+    # Normalize the angle
     normalized_angle = (90 - abs(relative_angle)) / 90
     weight = (normalized_angle * normalized_dist) ** 0.5
+    # Calculate the final servo angle
     servo_angle = 90 - weight * 42 if relative_angle > 0 else 90 + weight * 42
+    # Make sure the angle is within servo range
     return int(max(48, min(132, servo_angle)))
 
 def send_if_allowed(angle):
     """
-    Sends a servo angle to a vehicle if enough time has passed.
+    Sends a servo angle to a vehicle if enough time has passed. Sends a
+    TCP message with the servo angle to the RC vehicle identified by the
+    global variable marker_id. The function enforces a minimum time
+    between messages (SEND_INTERVAL). If the vehicle has not received
+    a command recently, the angle is sent, and the timestamp and last 
+    angle are updated. If sending fails (e.g., disconnected socket), 
+    the vehicle is removed from all tracking dictionaries.
 
     Parameters:
         angle (int): The servo angle to send. Expected range is
@@ -111,17 +146,6 @@ def send_if_allowed(angle):
 
     Returns:
         None
-
-    Description:
-        Sends a TCP message with the servo angle to the RC vehicle
-        identified by the global variable marker_id. The function
-        enforces a minimum time between messages (SEND_INTERVAL).
-
-        If the vehicle has not received a command recently, the
-        angle is sent, and the timestamp and last angle are updated.
-
-        If sending fails (e.g., disconnected socket), the vehicle is
-        removed from all tracking dictionaries.
     """
     current_time = time.time()
     last_time = last_send_times.get(marker_id, 0)
@@ -139,25 +163,64 @@ def send_if_allowed(angle):
             last_send_times.pop(marker_id, None)
 
 def compute_point_score(relative_angle, dist):
+    """
+    Computes a weighted score for a point based on its relative angle
+    and distance. This function is typically used to evaluate obstacle
+    points. A lower score indicates a more desirable path (closer to 
+    straight ahead and farther away). It penalizes sharp angles and 
+    close distances using a weighted, non-linear scoring model.
+
+    Parameters:
+        relative_angle (float): The angle between the vehicle's heading
+            and the obstacle point. Should be between -90 and 90 degrees.
+        dist (float): The distance to the point being scored.
+
+    Returns:
+        float: A score value where lower is better. Returns infinity if
+        the angle is outside the allowed field of view (beyond ±90°).
+    """
     if abs(relative_angle) > 90:
         return float('inf')
+
+    # Make sure the distance is within range
     dist = max(LOW_THRESHOLD, min(HIGH_THRESHOLD, dist))
-    normalized_dist = (dist - LOW_THRESHOLD) / (HIGH_THRESHOLD - LOW_THRESHOLD)
-    angle = abs(relative_angle)
-    normalized_angle = (angle / 90) ** 2.5
-    return 0.6 * normalized_dist + 0.4 * normalized_angle
+
+    # Normalize the distance 
+    normalized_dist = (HIGH_THRESHOLD - dist) / (HIGH_THRESHOLD - LOW_THRESHOLD)
+
+    # Normalize angle
+    normalized_angle = (abs(relative_angle) / 90) ** 2.5    
+
+    # Compute weighted score: prioritize direction over distance (0.6 vs 0.4)
+    return 0.4 * normalized_dist + 0.6 * normalized_angle
 
 def dynamic_threshold(relative_angle):
+    """
+    Computes a dynamic distance threshold based on the vehicle's steering angle.
+
+    This function adjusts how far the system should "look ahead" depending on the 
+    angle between the car's heading and a target or obstacle. Straighter paths 
+    allow for farther lookahead, while sharper turns limit the useful distance.
+
+    Parameters:
+        relative_angle (float): The relative heading angle in degrees 
+                                (typically between -90 and 90).
+
+    Returns:
+        float: A distance threshold that defines how far to consider points 
+               relevant for steering or scoring logic.
+    """
     angle = abs(relative_angle)
 
     if angle < 15:
-        return HIGH_THRESHOLD      # Straight ahead — look far
+        return HIGH_THRESHOLD  # Straight ahead — look far
     elif angle < 30:
-        return HIGH_THRESHOLD * 0.75  # Slightly reduced
+        return LOW_THRESHOLD + (HIGH_THRESHOLD - LOW_THRESHOLD) * 0.5  # Slightly reduced lookahead
     elif angle < 60:
-        return LOW_THRESHOLD + (HIGH_THRESHOLD - LOW_THRESHOLD) * 0.25
+        return LOW_THRESHOLD + (HIGH_THRESHOLD - LOW_THRESHOLD) * 0.25  # Conservative range
     else:
-        return LOW_THRESHOLD       # Sides — look close only
+        return LOW_THRESHOLD  # Sharp turn — look close for quicker reaction
+
     
 
 # ==== Start of the Program ====
