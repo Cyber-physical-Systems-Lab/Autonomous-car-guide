@@ -17,7 +17,7 @@ This guide covers:
 
 By the end of this guide, you should have a working system capable of:
 - Detecting ArUco markers from an overhead camera
-- Monitoring proximity to a taped border
+- Monitoring distance to a taped border
 - Controlling an RC car in real-time via manual or automated logic
 
 -----------------------------------------------------------------------
@@ -25,7 +25,7 @@ By the end of this guide, you should have a working system capable of:
 -----------------------------------------------------------------------
 - [Required Components](#required-components)
 - [Tips for an Upgraded Approach](#tips-for-an-upgraded-approach)
-- [Chassie build](#chassie-build)
+- [Chassis build](#chassis-build)
 - [Connecting Inputs to PCA9685](#connecting-inputs-to-pca9685)
 - [Connecting Outputs from PCA9685](#connecting-outputs-from-pca9685)
 - [Motor Connections](#motor-connections)
@@ -43,14 +43,19 @@ To complete this project, you’ll need the following:
 - **XRAY M18 PRO chassis**
 - **Hobbywing QuicRun Fusion Mini 16** (2-in-1 ESC + motor combo)
 - **LiPo battery** for motor (2S or 3S, 7.4–11.1V, EC2 connector)
-- **Power supply** for Raspberry Pi and PCA9685 (e.g., 5V 5A USB-C)
+- **Power supply** 7.4V Li-Po battery with step-down converters
 - **PCA9685 16-channel PWM driver board**
 - **Printed ArUco marker** (attached to the RC car)
-- **USB webcam** (mounted overhead — 720p or better recommended)
+- **USB webcamera**
+- **HW-BQ2001** stabilized DC converter for the pi
+- **XL4015E1** step down DC converter for the PCA
 
 ### Wiring & Connectors
 - 4× **female-to-female jumper wires** (Pi to PCA9685 I2C)
 - 2× **male-to-female jumper wires** (motor signal + ground to Pi)
+- 2× **male-to-male jumper wires** (Power for PCA9685)
+- **XT60H Parallel Battery Connector**
+- **Stripped USB-C adapter**
 
 ### Peripherals for Pi Setup
 - **Monitor** (with HDMI input)
@@ -79,10 +84,10 @@ the battery adapter used in this project. The gears included with the
 chassis do not fit the motor’s pinion shaft.
 
 Either swap out the motor for a one that fits the requirements on the
-other components. Or swap out only the battery to be able to skip the 
-wire replacement.
+other components. Or swap out the battery to be able to skip the 
+wire replacement and order another pinion gear.
 -----------------------------------------------------------------------
-## Chassie build
+## Chassis build
 -----------------------------------------------------------------------
 The **XRAY M18 PRO** is delivered as a disassembled chassis and must be
 assembled before use. A simple step-by-step assembly guide is included 
@@ -97,7 +102,7 @@ This combination allows a stable and functional mounting, even if not
 perfectly symmetrical.
 
 ### Motor Fitment
-
+TODO
 
 ### Gear Compatibility
 Use the gear specified under [Required Components](#required-components), 
@@ -165,9 +170,61 @@ Leave the **red wire unconnected** when wiring the signal output.
 Reference image:
 ![PCA wiring](img/Pi_wiring.jpg)
 
-------------------------------------------------------------------------
+-----------------------------------------------------------------------
+## Battery Management
+-----------------------------------------------------------------------
+
+To power the Raspberry Pi, motor and PCA9685 from a single Li-Po 
+battery, modify a XT60H parallel connector and use two buck converters:  
+**HW-BQ2001** (for the Pi) and **XL4015E1** (for the PCA9685).
+
+#### Steps
+
+1. **Cut and prepare the XT60H connector**  
+- Cut off one end of the XT60H parallel wire to expose bare wires.  
+- Strip a short length of insulation from both the red and black wires.
+
+2. **Connect power to the XL4015E1 input**  
+- Twist the red and black wires from the XT60 with the  
+    matching wires from the HW-BQ2001 input side.  
+- Solder the combined red wires to the `+` input terminal of XL4015E1.  
+- Solder the black wires to the `–` input terminal.
+
+3. **Connect the HW-BQ2001 output to the USB-C adapter**  
+- Strip the **output wires** of the HW-BQ2001 buck converter.  
+- Use a USB-C power cable with red and black wires already exposed.  
+- Solder the **red HW-BQ2001 wire** to the **red USB-C wire** (+).  
+- Solder the **black HW-BQ2001 wire** to the **black USB-C wire** (–).  
+- Insulate the joints with heat shrink tubing or electrical tape.  
+- Plug the USB-C end into the Raspberry Pi’s power port.
+
+4. **Set up XL4015E1 output to the PCA9685**  
+- Solder two male-to-male jumper wires to the XL4015E1 output.  
+- Red jumper for 5V (V+), black jumper for GND.  
+- Plug them into the screw terminals of the PCA9685.
+
+5. **Adjust the XL4015E1 voltage**  
+- Plug in the Li-Po battery using the XT60 plug.  
+- Use a multimeter to measure the XL4015E1 output.  
+- Turn the small screw on the blue potentiometer until it reads 5.00V.
+
+6. **Final connections**  
+- XL4015E1 output goes to PCA9685 V+ and GND.  
+- HW-BQ2001 output (via USB-C) powers the Raspberry Pi.  
+- The XT60 adapter goes to the motor
+- Ensure all grounds are connected and shared between devices.
+
+#### Summary
+
+- XT60H cable splits the battery output to two buck converters.  
+- XL4015E1 supplies 5V to the PCA9685 via screw terminals.  
+- HW-BQ2001 powers the Pi through a custom USB-C cable.  
+- All devices must share a common ground for stability.
+
+
+-----------------------------------------------------------------------
 ## Software Setup Pi
-------------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 1. Flash the SD card with Raspberry Pi OS using an external computer.
 2. Insert the SD card and power the Raspberry Pi 5.
@@ -178,7 +235,10 @@ Reference image:
 
 git clone 
 https://github.com/Cyber-physical-Systems-Lab/AutonomousCarGuide.git
-cd AutonomousCarGuide/Client
+cd Autonomous-car-guide/Client
+sudo apt-get update
+sudo apt-get install python3-pip python3-dev i2c-tools
+pip3 install -r requirements_client.txt --break-system-packages
 
 sudo raspi-config
 Here we need to enable I2C by clicking:
@@ -187,22 +247,38 @@ Here we need to enable I2C by clicking:
 Would you like the ARM I2C interface to be enabled?
 <Yes>
 
-sudo apt-get update
-sudo apt-get install python3-pip python3-dev i2c-tools
+Go into the client.py file and change the server IP-address to
+the address of the external computer that is being used as server.
 
-Now we need to download and install all dependencies. 
-pip3 install adafruit-blinka adafruit-circuitpython-servokit --break-system-packages
-
-Go into the client_steering.py file and change the server IP-adress to
-the adress of the external computer that is being used as server.
-
-------------------------------------------------------------------------
+-----------------------------------------------------------------------
 ## Software Setup for External Computer
-------------------------------------------------------------------------
-
-pip install cv2
+-----------------------------------------------------------------------
 
 git clone 
 https://github.com/Cyber-physical-Systems-Lab/AutonomousCarGuide.git
-cd AutonomousCarGuide/Server
+cd Autonomous-car-guide/Server
+sudo apt-get update
+sudo apt-get install python3-pip
+pip3 install -r requirements_server.txt
 
+-----------------------------------------------------------------------
+## Running the System
+-----------------------------------------------------------------------
+
+First, start the server script by writing:
+python .\aruco_edge_detector.py
+
+And start the client with.
+python client.py
+
+-----------------------------------------------------------------------
+## Project Wrap-up
+-----------------------------------------------------------------------
+
+You're now ready to build and operate a fully functional, centralized  
+autonomous vehicle platform.
+
+For questions, suggestions, or contributions, feel free to submit a  
+GitHub issue or open a pull request!
+
+Happy building!

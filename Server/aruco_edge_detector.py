@@ -21,6 +21,9 @@ HIGH_THRESHOLD = 80
 SEND_INTERVAL = 0.2 
 # Scale for turn intensity
 SCALE = 0.2
+WEIGHT = 0.5
+DIST_FAVOR = 0.4
+
 
 
 # ==== State Tracking ====
@@ -123,7 +126,7 @@ def map_angle_to_servo(relative_angle, dist):
     normalized_dist = (HIGH_THRESHOLD - dist) / (HIGH_THRESHOLD - LOW_THRESHOLD)
     # Normalize the angle
     normalized_angle = (90 - abs(relative_angle)) / 90
-    weight = (normalized_angle * normalized_dist) ** 0.5
+    weight = (normalized_angle * normalized_dist) ** WEIGHT
     # Calculate the final servo angle
     servo_angle = 90 - weight * 42 if relative_angle > 0 else 90 + weight * 42
     # Make sure the angle is within servo range
@@ -192,7 +195,7 @@ def compute_point_score(relative_angle, dist):
     normalized_angle = (abs(relative_angle) / 90) ** 2.5    
 
     # Compute weighted score: prioritize direction over distance (0.6 vs 0.4)
-    return 0.4 * normalized_dist + 0.6 * normalized_angle
+    return DIST_FAVOR * normalized_dist + (1 - DIST_FAVOR) * normalized_angle
 
 def dynamic_threshold(relative_angle):
     """

@@ -1,4 +1,4 @@
-# AutonomousCarGuide
+# Autonomous-car-guide
 
 ----------------------------------------------------------------------
 ## Table of Contents
@@ -10,7 +10,6 @@
 - [Simulations / Demos](#simulations--demos)
 - [Configuration](#configuration)
 - [Dependencies](#dependencies)
-- [Data Logging & Evaluation](#data-logging--evaluation)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -58,7 +57,7 @@ Laptop (Server - Vision & Control Unit)
   - Yellow lane boundary detection via HSV thresholding and contour
     detection
 - Control Logic:
-  - Manual control via keyboardnds
+  - Manual control via keyboard commands
   - Automatic lane boundary detection and reactive steering
 
 
@@ -95,22 +94,27 @@ Webcam Input
 ## Installation
 ----------------------------------------------------------------------
 
-On Laptop (Controller / Server)
+On Laptop (Controller / Server):
 git clone 
 https://github.com/Cyber-physical-Systems-Lab/AutonomousCarGuide.git
 cd Autonomous-car-guide/Server
-pip install -r requirements.txt
+sudo apt-get update
+sudo apt-get install python3-pip
+pip3 install -r requirements_server.txt
 
-On Raspberry Pi (RC Car / Client)
+
+On Raspberry Pi (RC Car / Client):
 git clone
 https://github.com/Cyber-physical-Systems-Lab/AutonomousCarGuide.git
-cd AutonomousCarGuide/Client
-pip install -r requirements.txt
+cd Autonomous-car-guide/Client
+sudo apt-get update
+sudo apt-get install python3-pip python3-dev i2c-tools
+pip3 install -r requirements_client.txt --break-system-packages
 
 ----------------------------------------------------------------------
 ## Usage
 ----------------------------------------------------------------------
-For automacy:
+For autonomous mode:
 1. Start the Server on the Laptop
 python aruco_edge_detector.py
 
@@ -142,45 +146,51 @@ Demo will be added
 ----------------------------------------------------------------------
 
 Parameters are currently defined as constants in the scripts:
+
 Client: 
   - USER = 1 
   - SERVER_IP = "192.168.x.x"    # replace with your laptop IP
   - STEERING_CHANNEL = 0         # PWM channel on PCA9685 to use
 
+
 Server:
   - ANGLE_THRESHOLD = 1          # Minimum angle difference required
                                       before sending a new command
   - LOW_THRESHOLD = 40           # Lower bound for  
-  - HIGH_THRESHOLD = 80
-  - SCALE = 0.2
-  - SEND_INTERVAL = 0.2
+  - HIGH_THRESHOLD = 80          # Upper bound 
+  - SCALE = 0.2                  # Scaling factor for adjusting the
+                                    turn intensity
+  - SEND_INTERVAL = 0.2          # How often the server can send a
+                                    message to the same vehicle
+  - WEIGHT = 0.5                 # Aggressiveness of the steering
+  - DIST_FAVOR = 0.4             # How much we want to favor distance
+                                    over angle in the point system.
+                                    (Angle favor is 1 - DIST_FAVOR)
 
+  Lower and upper limits of the HSV color range:
   - lower_yellow = np.array([18, 80, 60])
   - upper_yellow = np.array([40, 255, 255])
 
-  
-Config support via YAML/JSON may be added in future updates.
+  The dynamic_threshold function has hardcoded angle thresholds that
+  may be altered and changed depending on the wanted "look" distance
+
 
 ----------------------------------------------------------------------
 ## Dependencies
 ----------------------------------------------------------------------
 
-Requirements laptop:
+Requirements laptop (Server):
 - Python 3.8
 - OpenCV 4.x
 - NumPy
 - keyboard (for manual control via server)
 
-Requirements RC:
+Raspberry Pi (Client):
 - Python 3.8
+- gpiozero
+- Adafruit ServoKit
+- Adafruit Blinka
 
-----------------------------------------------------------------------
-## Data Logging & Evaluation
-----------------------------------------------------------------------
-
-Planned features:
-- Navigational outputs from server depending on vehicle detection
-- Making overtakes possible on multi-lane roads
 
 ----------------------------------------------------------------------
 ## Contributing
