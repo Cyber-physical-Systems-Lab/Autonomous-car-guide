@@ -15,7 +15,6 @@ print("Server started. Waiting for RC vehicles to connect...")
 # Minimum angle change required to send a new command
 ANGLE_THRESHOLD = 1
 # Distance to consider a point "to close"
-DIST_THRESHOLD = 50 
 LOW_THRESHOLD = 40
 HIGH_THRESHOLD = 80
 # Minimum time between messages to a vehicle (seconds)
