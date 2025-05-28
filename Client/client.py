@@ -2,6 +2,7 @@ import socket
 from adafruit_servokit import ServoKit
 
 USER = 1
+# Use IP from central PC
 SERVER_IP = "192.168.0.219"
 SERVER_PORT = 5000
 STEERING_CHANNEL = 0

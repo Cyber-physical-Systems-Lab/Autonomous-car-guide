@@ -57,7 +57,8 @@ try:
         
         elif command == "full_left":
             print(f"Command = {command}")
-            kit.servo[0].angle = turn_min
+            turn = turn_min
+            kit.servo[0].angle = turn
             
         elif command == "right":
             print(f"Command = {command}")
@@ -67,7 +68,8 @@ try:
                 
         elif command == "full_right":
             print(f"Command = {command}")
-            kit.servo[0].angle = turn_max
+            turn = turn_max
+            kit.servo[0].angle = turn
             
         elif command == "straight":
             print(f"Command = {command}")
