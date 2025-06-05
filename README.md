@@ -69,27 +69,27 @@ Communication Protocol
   2. Server processes camera feed, detects marker and boundaries
   3. Server sends commands (e.g., "left", "90") via TCP
   4. Client parses and executes the command using GPIO/PWM
+```
+Data Flow:
 
-Data Flow:<br>
-
-Webcam Input<br>
-    │<br>
-    ├──► ArUco Detection<br>
-    ├──► Edge (Contour) Detection<br>
-    └──► Marker-to-Edge Evaluation<br>
-          │<br>
-          ▼<br>
-    TCP Command: "left", "right", etc.<br>
-          │<br>
-          ▼<br>
-    Raspberry Pi GPIO Control<br>
-          │            │<br>
-          ▼            ▼<br>
-        PCA9685     ESC/Motor<br>
-          │<br>
-          ▼<br>
-    D89MW servo driver<br>
-
+Webcam Input
+    │
+    ├──► ArUco Detection
+    ├──► Edge (Contour) Detection
+    └──► Marker-to-Edge Evaluation
+          │
+          ▼
+    TCP Command: "left", "right", etc.
+          │
+          ▼
+    Raspberry Pi GPIO Control
+          │            │
+          ▼            ▼
+        PCA9685     ESC/Motor
+          │
+          ▼
+    D89MW servo driver
+```
 ----------------------------------------------------------------------
 ## Installation
 ----------------------------------------------------------------------
