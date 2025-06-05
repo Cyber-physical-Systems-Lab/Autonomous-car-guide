@@ -70,46 +70,46 @@ Communication Protocol
   3. Server sends commands (e.g., "left", "90") via TCP
   4. Client parses and executes the command using GPIO/PWM
 
-Data Flow:
+Data Flow:<br>
 
-Webcam Input
-    │
-    ├──► ArUco Detection
-    ├──► Edge (Contour) Detection
-    └──► Marker-to-Edge Evaluation
-          │
-          ▼
-    TCP Command: "left", "right", etc.
-          │
-          ▼
-    Raspberry Pi GPIO Control
-          │            │
-          ▼            ▼     
-        PCA9685     ESC/Motor
-          │
-          ▼
-    D89MW servo driver
+Webcam Input<br>
+    │<br>
+    ├──► ArUco Detection<br>
+    ├──► Edge (Contour) Detection<br>
+    └──► Marker-to-Edge Evaluation<br>
+          │<br>
+          ▼<br>
+    TCP Command: "left", "right", etc.<br>
+          │<br>
+          ▼<br>
+    Raspberry Pi GPIO Control<br>
+          │            │<br>
+          ▼            ▼<br>
+        PCA9685     ESC/Motor<br>
+          │<br>
+          ▼<br>
+    D89MW servo driver<br>
 
 ----------------------------------------------------------------------
 ## Installation
 ----------------------------------------------------------------------
 
-On Laptop (Controller / Server):
-git clone 
-https://github.com/Cyber-physical-Systems-Lab/AutonomousCarGuide.git
-cd Autonomous-car-guide/Server
-sudo apt-get update
-sudo apt-get install python3-pip
-pip3 install -r requirements_server.txt
+On Laptop (Controller / Server):<br>
+git clone<br>
+https://github.com/Cyber-physical-Systems-Lab/AutonomousCarGuide.git<br>
+cd Autonomous-car-guide/Server<br>
+sudo apt-get update<br>
+sudo apt-get install python3-pip<br>
+pip3 install -r requirements_server.txt<br>
 
 
-On Raspberry Pi (RC Car / Client):
-git clone
-https://github.com/Cyber-physical-Systems-Lab/AutonomousCarGuide.git
-cd Autonomous-car-guide/Client
-sudo apt-get update
-sudo apt-get install python3-pip python3-dev i2c-tools
-pip3 install -r requirements_client.txt --break-system-packages
+On Raspberry Pi (RC Car / Client):<br>
+git clone<br>
+https://github.com/Cyber-physical-Systems-Lab/AutonomousCarGuide.git<br>
+cd Autonomous-car-guide/Client<br>
+sudo apt-get update<br>
+sudo apt-get install python3-pip python3-dev i2c-tools<br>
+pip3 install -r requirements_client.txt --break-system-packages<br>
 
 ----------------------------------------------------------------------
 ## Usage
