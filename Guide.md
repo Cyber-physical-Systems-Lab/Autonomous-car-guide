@@ -49,6 +49,7 @@ To complete this project, you’ll need the following:
 - **USB webcamera**
 - **HW-BQ2001** stabilized DC converter for the pi
 - **XL4015E1** step down DC converter for the PCA
+- **Pinion gear** (pinion gear with 2.3mm wide hole)
 
 ### Wiring & Connectors
 - 4× **female-to-female jumper wires** (Pi to PCA9685 I2C)
@@ -66,10 +67,13 @@ To complete this project, you’ll need the following:
 ### Tools & Accessories
 - **Multimeter** (to verify voltage and continuity)
 - **Soldering iron** (for solid, permanent connections if needed)
+- **Solder wire** 
 - **Zip ties** or **double-sided tape** (to secure components)
 - **SD card reader** (for flashing the Raspberry Pi OS)
 - **Small screwdriver set**
 - **Printer** (for printing ArUco markers at correct scale)
+- **Battery charger**
+- **Screwdriver**
 
 -----------------------------------------------------------------------
 ## Tips for an Upgraded Approach
@@ -146,31 +150,6 @@ signal is properly routed.
 - **Black → Black** (Ground)
 
 -----------------------------------------------------------------------
-## Motor connections
------------------------------------------------------------------------
-You will need 2 male-to-female jumper wires.
-
-The **Hobbywing QuicRun Fusion Mini 16** requires a power source of
-**7.4V (2S Li-Po)** to **11.1V (3S Li-Po)**. Connect your battery to
-the motor via the **blue EC2 connector**.
-
-Since the motor draws power directly from the external battery, it does
-**not** require power from the red V+ (power) wire on the PCA9685. It
-only needs:
-
-- A PWM **signal**
-- A shared **ground** with the rest of the system
-
-Leave the **red wire unconnected** when wiring the signal output.
-
-### Wiring Instructions:
-- Connect the signal wire to **GPIO 26 (Pin 37)** on the Raspberry Pi  
-- Connect the ground wire to **Ground (Pin 39)** on the Raspberry Pi
-
-Reference image:
-![PCA wiring](img/Pi_wiring.jpg)
-
------------------------------------------------------------------------
 ## Battery Management
 -----------------------------------------------------------------------
 
@@ -221,6 +200,30 @@ battery, modify a XT60H parallel connector and use two buck converters:
 - HW-BQ2001 powers the Pi through a custom USB-C cable.  
 - All devices must share a common ground for stability.
 
+-----------------------------------------------------------------------
+## Motor connections
+-----------------------------------------------------------------------
+You will need 2 male-to-female jumper wires.
+
+The **Hobbywing QuicRun Fusion Mini 16** requires a power source of
+**7.4V (2S Li-Po)** to **11.1V (3S Li-Po)**. Connect your battery to
+the motor via the **blue EC2 connector**.
+
+Since the motor draws power directly from the external battery, it does
+**not** require power from the red V+ (power) wire on the PCA9685. It
+only needs:
+
+- A PWM **signal**
+- A shared **ground** with the rest of the system
+
+Leave the **red wire unconnected** when wiring the signal output.
+
+### Wiring Instructions:
+- Connect the signal wire to **GPIO 26 (Pin 37)** on the Raspberry Pi  
+- Connect the ground wire to **Ground (Pin 39)** on the Raspberry Pi
+
+Reference image:
+![Pi wiring](img/Pi_wiring.jpg)
 
 -----------------------------------------------------------------------
 ## Software Setup Pi
@@ -272,10 +275,32 @@ And start the client with.
 python client.py
 
 -----------------------------------------------------------------------
+## Calibration
+-----------------------------------------------------------------------
+Calibrating the motor is an important step to ensure consistent and
+reliable throttle control. Using the `calibration.py` script provided
+in the repository, follow these steps:
+
+1. **Make sure the ESC is off** using the switch.
+2. **Power the motor** (ensure the power source is connected).
+3. **Press and hold the button on the ESC**, then **turn it on** while
+    continuing to hold the button.
+4. When the motor begins to beep, **release the button**.
+5. On the Raspberry Pi, **start the `calibration.py` script**.
+6. When the program says: `Press enter to send neutral throttle`,  
+    press **Enter**, then **press the button on the ESC**.
+    The motor should beep once.
+7. Repeat this process when prompted for **max** and **min** throttle:  
+   - The motor will beep **twice** for max  
+   - And **three times** for min
+8. When the script finishes, **calibration is complete**.
+9. You can now run your desired control program.
+
+-----------------------------------------------------------------------
 ## Project Wrap-up
 -----------------------------------------------------------------------
 
-You're now ready to build and operate a fully functional, centralized  
+You're now ready to build and operate a functional, centralized  
 autonomous vehicle platform.
 
 For questions, suggestions, or contributions, feel free to submit a  

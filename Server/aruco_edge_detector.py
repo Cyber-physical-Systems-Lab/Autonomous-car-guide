@@ -18,11 +18,11 @@ ANGLE_THRESHOLD = 1
 LOW_THRESHOLD = 40
 HIGH_THRESHOLD = 80
 # Minimum time between messages to a vehicle (seconds)
-SEND_INTERVAL = 0.2 
+SEND_INTERVAL = 0.05
 # Scale for turn intensity
 SCALE = 0.2
 WEIGHT = 0.5
-DIST_FAVOR = 0.4
+ANGLE_FAVOR = 0.7
 
 
 
@@ -189,13 +189,12 @@ def compute_point_score(relative_angle, dist):
     dist = max(LOW_THRESHOLD, min(HIGH_THRESHOLD, dist))
 
     # Normalize the distance 
-    normalized_dist = (HIGH_THRESHOLD - dist) / (HIGH_THRESHOLD - LOW_THRESHOLD)
-
+    normalized_dist = (dist - LOW_THRESHOLD) / (HIGH_THRESHOLD - LOW_THRESHOLD)
     # Normalize angle
     normalized_angle = (abs(relative_angle) / 90) ** 2.5    
 
-    # Compute weighted score: prioritize direction over distance (0.6 vs 0.4)
-    return DIST_FAVOR * normalized_dist + (1 - DIST_FAVOR) * normalized_angle
+    # Compute weighted score: prioritize direction over distance
+    return ANGLE_FAVOR * normalized_dist + (1 - ANGLE_FAVOR) * normalized_angle
 
 def dynamic_threshold(relative_angle):
     """
@@ -305,9 +304,10 @@ while True:
                     # Angle is None if closest is behind the marker 
                     if servo_angle is not None:
                         last_angle = last_sent_angles.get(marker_id, None)
-                        if last_angle is None or abs(servo_angle - last_angle
-                            ) >= ANGLE_THRESHOLD:
-                            send_if_allowed(servo_angle)
+                        if last_angle is None or (abs(servo_angle - last_angle
+                            ) >= ANGLE_THRESHOLD and abs(servo_angle - last_angle) < 70):
+                            # if abs(servo_angle - last_angle) < 70:
+                                send_if_allowed(servo_angle)
 
             # If no object found, command vehicle to go straight
             elif last_sent_angles.get(marker_id, None) != 90:

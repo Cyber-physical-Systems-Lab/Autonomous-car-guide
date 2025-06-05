@@ -62,8 +62,7 @@ def send_control_signals(clientsocket):
             elif keyboard.is_pressed('q'):
                 message = "stop"
                 clientsocket.send(bytes(message, "utf-8"))
-                print("Quitting control...")
-                break
+                print(f"Sent: {message}") 
     except Exception as e:
         print(f"Error: {e}")
 

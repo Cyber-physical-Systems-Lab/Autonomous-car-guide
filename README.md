@@ -51,26 +51,26 @@ RC Car (Client - Raspberry Pi)
 
 Laptop (Server - Vision & Control Unit)
 
-- Camera: USB connected webcamera (overhead view)
+- Camera: USB-connected webcamera (overhead view)
 - Visual Processing:
   - ArUco marker detection for car localization (OpenCV)
   - Yellow lane boundary detection via HSV thresholding and contour
     detection
 - Control Logic:
-  - Manual control via keyboard commands
   - Automatic lane boundary detection and reactive steering
+  - Manual control via keyboard commands
 
 
 Communication Protocol
 
-- Type: TCP socket (IPv4)
+- Type: TCP socket
 - Flow:
   1. Client (Raspberry Pi) connects to server
   2. Server processes camera feed, detects marker and boundaries
   3. Server sends commands (e.g., "left", "90") via TCP
   4. Client parses and executes the command using GPIO/PWM
 
-Data Flow
+Data Flow:
 
 Webcam Input
     │
@@ -139,7 +139,7 @@ python steering_client.py
 
 - Real-time manual control over Wi-Fi
 
-Demo will be added
+![Autonomous Vehicle Demo](img/demo.gif)
 
 ----------------------------------------------------------------------
 ## Configuration
@@ -163,9 +163,9 @@ Server:
   - SEND_INTERVAL = 0.2          # How often the server can send a
                                     message to the same vehicle
   - WEIGHT = 0.5                 # Aggressiveness of the steering
-  - DIST_FAVOR = 0.4             # How much we want to favor distance
-                                    over angle in the point system.
-                                    (Angle favor is 1 - DIST_FAVOR)
+  - ANGLE_FAVOR = 0.4            # How much we want to favor angle
+                                    over distance in the point system.
+                              
 
   Lower and upper limits of the HSV color range:
   - lower_yellow = np.array([18, 80, 60])

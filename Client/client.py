@@ -1,5 +1,6 @@
 import socket
 from adafruit_servokit import ServoKit
+from gpiozero import PWMOutputDevice
 
 USER = 1
 # Use IP from central PC
@@ -12,6 +13,11 @@ kit = ServoKit(channels=8)
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((SERVER_IP, SERVER_PORT))
 s.sendall(str(USER).encode())
+
+# Code for a small torque on the motor
+# pin = 26
+# motor = PWMOutputDevice(pin, frequency=50)
+# motor.value = 0.085
 
 # Wrap socket as file-like object for clean line reading
 sock_file = s.makefile("r")

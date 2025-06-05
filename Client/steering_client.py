@@ -4,12 +4,14 @@ import time
 from gpiozero import PWMOutputDevice
 import socket
 
+USER = 1
 pin=26
 motor= PWMOutputDevice(pin,frequency=50)
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #Use the PC (server) IP-adress for connection
 s.connect(("192.168.0.219", 5000))
+s.sendall(str(USER).encode())
 
 kit = ServoKit(channels=8)
 
