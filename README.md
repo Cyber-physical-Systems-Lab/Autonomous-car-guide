@@ -5,6 +5,7 @@
 ----------------------------------------------------------------------
 - [Overview](#overview)
 - [System Architecture](#system-architecture)
+- [Navigation Algorithm](#navigation-algorithm)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Simulations / Demos](#simulations--demos)
@@ -32,9 +33,10 @@ learning basic autonomy.
 ----------------------------------------------------------------------
 ## System Architecture
 ----------------------------------------------------------------------
-
 This CPS architecture integrates physical mobility, embedded 
 computation, and real-time visual perception.
+
+![System Architecture](img/Architecture.png)
 
 RC Car (Client - Raspberry Pi)
 
@@ -69,27 +71,25 @@ Communication Protocol
   2. Server processes camera feed, detects marker and boundaries
   3. Server sends commands (e.g., "left", "90") via TCP
   4. Client parses and executes the command using GPIO/PWM
-```
-Data Flow:
 
-Webcam Input
-    │
-    ├──► ArUco Detection
-    ├──► Edge (Contour) Detection
-    └──► Marker-to-Edge Evaluation
-          │
-          ▼
-    TCP Command: "left", "right", etc.
-          │
-          ▼
-    Raspberry Pi GPIO Control
-          │            │
-          ▼            ▼
-        PCA9685     ESC/Motor
-          │
-          ▼
-    D89MW servo driver
-```
+----------------------------------------------------------------------
+## Navigation Algorithm
+----------------------------------------------------------------------
+
+The following flowchart illustrates the central navigation logic used
+by the server. It processes the camera feed, identifies ArUco markers
+to locate each vehicle, and evaluates nearby lane boundary points
+(yellow contours) to determine an appropriate steering command.
+
+The system scores candidate points based on their direction and
+distance relative to the car's heading. Only valid points in front
+of the vehicle and within a dynamic threshold are considered. A turn
+command is sent only if the change in angle is significant and within
+safe limits.
+
+![Navigation Algorithm](img/Navigation.png)
+
+
 ----------------------------------------------------------------------
 ## Installation
 ----------------------------------------------------------------------
@@ -140,6 +140,10 @@ python steering_client.py
 - Real-time manual control over Wi-Fi
 
 ![Autonomous Vehicle Demo](img/demo.gif)
+
+View from the central computer while running:
+
+![View](img/view.png)
 
 ----------------------------------------------------------------------
 ## Configuration
@@ -206,4 +210,13 @@ To contribute:
 ## License
 ----------------------------------------------------------------------
 
-For academic or institutional use, please cite accordingly.
+This project is released under an open-source license to support
+education and research in autonomous systems. 
+
+Please cite this work appropriately in academic or institutional use.
+
+While the system is intended for controlled environments, users who
+adapt or extend it are responsible for ensuring that their 
+implementations comply with safety, legal, and ethical standards.
+Misuse of the system in real-world or safety-critical scenarios is
+strongly discouraged without proper validation and oversight.
